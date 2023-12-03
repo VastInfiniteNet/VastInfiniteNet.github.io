@@ -1,20 +1,26 @@
 <div>
-   <canvas id="myChart"></canvas>
+   <canvas id="depthChart"></canvas>
+</div>
+
+<div>
+   <canvas id="playerNetChart"></canvas>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const ctx = document.getElementById('myChart');
+const ctx = document.getElementById('depthChart');
+const ctx2 = document.getElementById('playerNetChart');
 
 const data = fetch("./numbers.json")
-.then( (res) => {
-   return res.json();
-})
-data.then(data => SetupChart(data))
+   .then((res) => {
+      return res.json();
+   })
+data.then(data => SetupDepthChart(data))
+//data.then(data => SetupPlayerNetChart(data))
 
 
-function SetupChart(data) {
+function SetupDepthChart(data) {
    var labels = []
 
    Object.keys(data['buy-orders']).forEach( key => {
@@ -28,31 +34,31 @@ function SetupChart(data) {
 
    labels.sort((a,b) => {return a - b})
 
-   var buyData = [data['buy-orders'][labels[0]] ?? 0]
-   var sellData = [data['sell-orders'][labels[0]] ?? 0]
+   var buyDepthData = [data['buy-orders'][labels[0]] ?? 0]
+   var sellDepthData = [data['sell-orders'][labels[0]] ?? 0]
 
    for (var i = 1; i < labels.length; i++) {
       buys = data['buy-orders'][labels[i]] ?? 0
-      sells = (data['sell-orders'][labels[i]] ?? 0) + sellData[i - 1]
+      sells = (data['sell-orders'][labels[i]] ?? 0) + sellDepthData[i - 1]
 
-      sellData.push(sells)
-      buyData.push(buys)
+      sellDepthData.push(sells)
+      buyDepthData.push(buys)
    }
 
-   buyData = buyData.reverse()
+   buyDepthData = buyDepthData.reverse()
 
    for ( var i = 0; i < labels.length; i++) {
-      if (sellData[i] == 0)
-         sellData[i] = undefined
+      if (sellDepthData[i] == 0)
+         sellDepthData[i] = undefined
       if ( i > 0)
-         buyData[i] += buyData[i - 1]
+         buyDepthData[i] += buyDepthData[i - 1]
    }
 
-   buyData = buyData.reverse()
+   buyDepthData = buyDepthData.reverse()
 
-   for (var i = 0; i < buyData.length; i++)
-      if (buyData[i] == 0)
-         buyData[i] = undefined
+   for (var i = 0; i < buyDepthData.length; i++)
+      if (buyDepthData[i] == 0)
+         buyDepthData[i] = undefined
 
 
    // SETUP
@@ -61,18 +67,17 @@ function SetupChart(data) {
       data: {
          labels: labels,
          datasets: [
-            
             {
                label: 'Selling Iron',
                fill: true,
-               stepped: 'middle',
-               data: sellData,
+               stepped: 'pre',
+               data: sellDepthData,
             },
             {
                label: 'Buying Iron',
                fill: true,
-               stepped: 'middle',
-               data: buyData,
+               stepped: 'after',
+               data: buyDepthData,
             }
          ]
       },
@@ -100,6 +105,51 @@ function SetupChart(data) {
          }
       }
    });
+}
+
+function SetupPlayerNetChart(marketOrders) {
+   console.log("Hello")
+   
+   const labels = [1, 2, 3, 4, 5, 6, 1 ,7 ];
+   const data = {
+      labels: labels,
+      datasets: [
+         {
+            data: [65, 59, 80, 281, 56, 55, 40, -100],
+            tension: 0.1
+         }
+      ]
+   };
+   const options = {
+      scales: {
+         y: {
+            beginAtZero: true,
+            title: {
+               display: true,
+               text: "Net Iron Change"
+            }
+         },
+         x: {
+            title: {
+               display: true,
+               text: 'Net Diamond Change'
+            }
+         }
+      },
+      plugins: {
+         title: {
+            display: true, 
+            text: "Player Net Sale"
+         }
+      }
+   }
+   const config = {
+      type: 'line',
+      data: data,
+      options: options
+   };
+
+   new Chart(ctx2, config)
 }
 
 </script>
