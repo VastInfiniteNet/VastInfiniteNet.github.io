@@ -1,0 +1,105 @@
+<div>
+   <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const ctx = document.getElementById('myChart');
+
+const data = fetch("./numbers.json")
+.then( (res) => {
+   return res.json();
+})
+data.then(data => SetupChart(data))
+
+
+function SetupChart(data) {
+   var labels = []
+
+   Object.keys(data['buy-orders']).forEach( key => {
+      if (!labels.includes(key))
+         labels.push(key)
+   })
+   Object.keys(data['sell-orders']).forEach( key => {
+      if (!labels.includes(key))
+         labels.push(key)
+   })
+
+   labels.sort((a,b) => {return a - b})
+
+   var buyData = [data['buy-orders'][labels[0]] ?? 0]
+   var sellData = [data['sell-orders'][labels[0]] ?? 0]
+
+   for (var i = 1; i < labels.length; i++) {
+      buys = data['buy-orders'][labels[i]] ?? 0
+      sells = (data['sell-orders'][labels[i]] ?? 0) + sellData[i - 1]
+
+      sellData.push(sells)
+      buyData.push(buys)
+   }
+
+   buyData = buyData.reverse()
+
+   for ( var i = 0; i < labels.length; i++) {
+      if (sellData[i] == 0)
+         sellData[i] = undefined
+      if ( i > 0)
+         buyData[i] += buyData[i - 1]
+   }
+
+   buyData = buyData.reverse()
+
+   for (var i = 0; i < buyData.length; i++)
+      if (buyData[i] == 0)
+         buyData[i] = undefined
+
+
+   // SETUP
+   new Chart(ctx, {
+      type: 'line',
+      data: {
+         labels: labels,
+         datasets: [
+            
+            {
+               label: 'Selling Iron',
+               fill: true,
+               stepped: 'middle',
+               data: sellData,
+            },
+            {
+               label: 'Buying Iron',
+               fill: true,
+               stepped: 'middle',
+               data: buyData,
+            }
+         ]
+      },
+      options: {
+         scales: {
+            y: {
+               beginAtZero: true,
+               title: {
+                  display: true,
+                  text: "Exchanges left"
+               }
+            },
+            x: {
+               title: {
+                  display: true,
+                  text: data['exchange-input'] + ' Per ' + data['exchange-output'] + ' Price'
+               }
+            }
+         },
+         plugins: {
+            title: {
+               display: true, 
+               text: 'Icenia ' + data['exchange-input'] + '/' + data['exchange-output'] + ' Market (' + data['date'] + ')'
+            }
+         }
+      }
+   });
+}
+
+</script>
