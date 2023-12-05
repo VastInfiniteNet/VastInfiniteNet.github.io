@@ -1,35 +1,149 @@
 {
     "exchange-input": "Iron",
     "exchange-output": "Diamond",
-    "date": "December 2nd, 2023",
-    "sell-orders": {
-        "10.5":  0,
-        "11": 0,
-        "11.5": 0,
-        "12": 0,
-        "12.5": 0,
-        "13": 0,
-        "13.5": 0,
-        "14": 0,
-        "14.5": 6,
-        "15": 87,
-        "15.5": 27,
-        "16": 94,
-        "16.5": 32,
-        "17": 52
-    },
-    "buy-orders": {
-        "9.5": 23,
-        "10": 37,
-        "10.3": 16,
-        "11": 46,
-        "11.3": 11,
-        "11.7": 18,
-        "13": 49,
-        "13.5": 34,
-        "14": 41,
-        "14.5": 0,
-        "15": 0,
-        "15.3": 0
-    }
+    "date": "December 4th, 2023",
+    "sell-orders": [
+      {
+         "input-amount": 21,
+         "output-amount": 2,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 11,
+         "output-amount": 1,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 23,
+         "output-amount": 2,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 12,
+         "output-amount": 1,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 25,
+         "output-amount": 2,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 13,
+         "output-amount": 1,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 27,
+         "output-amount": 2,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 14,
+         "output-amount": 1,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 29,
+         "output-amount": 2,
+         "exchanges-left": 6
+      },
+      {
+         "input-amount": 15,
+         "output-amount": 1,
+         "exchanges-left": 87
+      },
+      {
+         "input-amount": 31,
+         "output-amount": 2,
+         "exchanges-left": 27
+      },
+      {
+         "input-amount": 16,
+         "output-amount": 1,
+         "exchanges-left": 94
+      },
+      {
+         "input-amount": 33,
+         "output-amount": 2,
+         "exchanges-left": 32
+      },
+      {
+         "input-amount": 17,
+         "output-amount": 1,
+         "exchanges-left": 52
+      }
+    ],
+    "buy-orders": [
+      {
+         "input-amount": 2,
+         "output-amount": 19,
+         "exchanges-left": 23
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 10,
+         "exchanges-left": 37
+      },
+      {
+         "input-amount": 3,
+         "output-amount": 31,
+         "exchanges-left": 16
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 11,
+         "exchanges-left": 46
+      },
+      {
+         "input-amount": 3,
+         "output-amount": 34,
+         "exchanges-left": 11
+      },
+      {
+         "input-amount": 3,
+         "output-amount": 35,
+         "exchanges-left": 18
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 13,
+         "exchanges-left": 49
+      },
+      {
+         "input-amount": 2,
+         "output-amount": 27,
+         "exchanges-left": 26
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 14,
+         "exchanges-left": 41
+      },
+      {
+         "input-amount": 2,
+         "output-amount": 27,
+         "exchanges-left": 8
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 14,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 2,
+         "output-amount": 29,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 1,
+         "output-amount": 15,
+         "exchanges-left": 0
+      },
+      {
+         "input-amount": 3,
+         "output-amount": 46,
+         "exchanges-left": 0
+      }
+    ]
 }
