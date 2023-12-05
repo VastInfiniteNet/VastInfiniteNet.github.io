@@ -1,7 +1,7 @@
 {
     "exchange-input": "Iron",
     "exchange-output": "Diamond",
-    "date": "December 4th, 2023",
+    "date": "12/4/23",
     "sell-orders": [
       {
          "input-amount": 21,
