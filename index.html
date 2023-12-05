@@ -10,7 +10,7 @@
 
 <script>
 const ctx = document.getElementById('depthChart');
-const ctx2 = document.getElementById('playerNetChart');
+//const ctx2 = document.getElementById('playerNetChart');
 
 const data = fetch("./numbers.json")
    .then((res) => {
@@ -19,75 +19,131 @@ const data = fetch("./numbers.json")
 data.then(data => SetupDepthChart(data))
 //data.then(data => SetupPlayerNetChart(data))
 
+function LeaveOneDecimalPlace(number) {
+   return Math.round(number * 10)/10
+}
 
 function SetupDepthChart(data) {
-   var labels = []
-
-   Object.keys(data['buy-orders']).forEach( key => {
-      if (!labels.includes(key))
-         labels.push(key)
-   })
-   Object.keys(data['sell-orders']).forEach( key => {
-      if (!labels.includes(key))
-         labels.push(key)
-   })
-
-   labels.sort((a,b) => {return a - b})
-
-   var buyDepthData = [data['buy-orders'][labels[0]] ?? 0]
-   var sellDepthData = [data['sell-orders'][labels[0]] ?? 0]
-
-   for (var i = 1; i < labels.length; i++) {
-      buys = data['buy-orders'][labels[i]] ?? 0
-      sells = (data['sell-orders'][labels[i]] ?? 0) + sellDepthData[i - 1]
-
-      sellDepthData.push(sells)
-      buyDepthData.push(buys)
+   class PricePoint {
+      buys;
+      sells;
+      constructor(sells = 0, buys = 0) {
+         this.sells = sells
+         this.buys = buys
+      }
    }
 
-   buyDepthData = buyDepthData.reverse()
+   var pricePoints = {}
+   
 
-   for ( var i = 0; i < labels.length; i++) {
-      if (sellDepthData[i] == 0)
-         sellDepthData[i] = undefined
-      if ( i > 0)
-         buyDepthData[i] += buyDepthData[i - 1]
+   data['sell-orders'].forEach(order => {
+      price = LeaveOneDecimalPlace(order['input-amount']/order['output-amount'])
+      pricePoints[price] = new PricePoint(sells = order['exchanges-left'] * order['output-amount'])
+   })
+
+   console.log("\n\n\n\n")
+
+   data['buy-orders'].forEach(order => {
+      price = LeaveOneDecimalPlace(order['output-amount']/order['input-amount'])
+      if (!(price in pricePoints))
+         pricePoints[price] = new PricePoint()
+      pricePoints[price].buys = order['exchanges-left'] * order['input-amount']
+   })
+
+   var buyDepthData = []
+   var sellDepthData = []
+   var priceLabels = []
+   Object.keys(pricePoints).sort((a,b) => {return a - b}).forEach(price => {
+      priceLabels.push(price)
+      sellDepthData.push(pricePoints[price]['sells'] * price)
+      buyDepthData.push(pricePoints[price]['buys'] * price)
+   })
+
+   console.log("Price Points:", pricePoints)
+   console.log("Price Labels:", priceLabels)
+   console.log("Sell Depth data:", sellDepthData)
+   console.log("Buy Depth Data:", buyDepthData)
+
+   var SumUntilIndex = (numList, index) => {
+      var total = 0
+      for(var i = 0; i <= index; i++) {
+         total += numList[i]
+      }
+      return total
    }
 
-   buyDepthData = buyDepthData.reverse()
+   var totalIronAvailable = buyDepthData.toReversed()
+   var totalDiamondAvailable = []
+   
+   totalDiamondAvailable = [sellDepthData[0] != 0 ? sellDepthData[0]/priceLabels[0] : undefined ]
+   if (totalIronAvailable[0] == 0)
+      totalIronAvailable[0] = undefined
+   else
+      totalIronAvailable[0] /= 9
 
-   for (var i = 0; i < buyDepthData.length; i++)
-      if (buyDepthData[i] == 0)
-         buyDepthData[i] = undefined
 
+   for (var i = 1; i < priceLabels.length; i++) {
+      partialDiamond = sellDepthData[i]/priceLabels[i] + (totalDiamondAvailable[i - 1] ?? 0)
+      if (partialDiamond == 0)
+         partialDiamond = undefined
+      totalDiamondAvailable.push(partialDiamond)
+      partialIron = totalIronAvailable[i]/9 + (totalIronAvailable[i - 1] ?? 0)
+      if (partialIron == 0)
+         partialIron = undefined
+      totalIronAvailable[i] = partialIron
+      console.log(totalIronAvailable)
+   }
+
+   totalIronAvailable.reverse()
 
    // SETUP
    new Chart(ctx, {
-      type: 'line',
       data: {
-         labels: labels,
+         labels: priceLabels,
          datasets: [
             {
                label: 'Selling Iron',
-               fill: true,
-               stepped: 'pre',
+               type: 'bar',
+               yAxisID: 'yBar',
                data: sellDepthData,
             },
             {
                label: 'Buying Iron',
-               fill: true,
-               stepped: 'after',
+               type: 'bar',
+               yAxisID: 'yBar',
                data: buyDepthData,
+            }, 
+            {
+               label: 'Total Diamonds Available',
+               yAxisID: 'yLine',
+               type: 'line',
+               fill: true,
+               data: totalDiamondAvailable
+            }, 
+            {
+               label: 'Total Iron Blocks Available',
+               yAxisID: 'yLine',
+               type: 'line',
+               fill: true,
+               data: totalIronAvailable
             }
          ]
       },
       options: {
          scales: {
-            y: {
+            yBar: {
                beginAtZero: true,
                title: {
                   display: true,
-                  text: "Exchanges left"
+                  text: "Iron Available (ingots)"
+               }
+            },
+            yLine: {
+               beginAtZero: true,
+               position: 'right',
+               title: {
+                  display: true,
+                  text: "Cumulative Total Asset Available (items)"
                }
             },
             x: {
@@ -101,55 +157,18 @@ function SetupDepthChart(data) {
             title: {
                display: true, 
                text: 'Icenia ' + data['exchange-input'] + '/' + data['exchange-output'] + ' Market (' + data['date'] + ')'
+            },
+            tooltip: {
+               callbacks: {
+                  footer: (tooltipItems) => {
+                     if (tooltipItems[0].datasetIndex == 3)
+                        return "Total Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9)
+                  }
+               }
             }
          }
       }
    });
-}
-
-function SetupPlayerNetChart(marketOrders) {
-   console.log("Hello")
-   
-   const labels = [1, 2, 3, 4, 5, 6, 1 ,7 ];
-   const data = {
-      labels: labels,
-      datasets: [
-         {
-            data: [65, 59, 80, 281, 56, 55, 40, -100],
-            tension: 0.1
-         }
-      ]
-   };
-   const options = {
-      scales: {
-         y: {
-            beginAtZero: true,
-            title: {
-               display: true,
-               text: "Net Iron Change"
-            }
-         },
-         x: {
-            title: {
-               display: true,
-               text: 'Net Diamond Change'
-            }
-         }
-      },
-      plugins: {
-         title: {
-            display: true, 
-            text: "Player Net Sale"
-         }
-      }
-   }
-   const config = {
-      type: 'line',
-      data: data,
-      options: options
-   };
-
-   new Chart(ctx2, config)
 }
 
 </script>
