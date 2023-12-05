@@ -163,8 +163,10 @@ function SetupDepthChart(data) {
                   footer: (tooltipItems) => {
                      if (tooltipItems[0].datasetIndex == 0 || tooltipItems[0].datasetIndex == 1) {
                         return "Diamonds worth: " + (tooltipItems[0].parsed.y/parseFloat(tooltipItems[0].label))
+                     } else if (tooltipItems[0].datasetIndex == 2) {
+                        return "Total Iron ingots needed: " + (tooltipItems[0].parsed.y*parseFloat(tooltipItems[0].label))
                      } else if (tooltipItems[0].datasetIndex == 3) {
-                        return "Total Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9)
+                        return "Total Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9) + '\nTotal Diamonds needed: ' + Math.ceil(tooltipItems[0].parsed.y*9/parseFloat(tooltipItems[0].label))
                      }
                   }
                }
