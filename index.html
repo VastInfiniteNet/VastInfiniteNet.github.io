@@ -117,6 +117,7 @@ function SetupDepthChart(data) {
                label: 'Cumulative Diamonds Available',
                yAxisID: 'yLine',
                type: 'line',
+               stepped: 'before',
                fill: true,
                data: totalDiamondAvailable
             }, 
@@ -124,6 +125,7 @@ function SetupDepthChart(data) {
                label: 'Cumulative Iron Blocks Available',
                yAxisID: 'yLine',
                type: 'line',
+               stepped: 'after',
                fill: true,
                data: totalIronAvailable
             }
@@ -164,7 +166,7 @@ function SetupDepthChart(data) {
                      if (tooltipItems[0].datasetIndex == 0 || tooltipItems[0].datasetIndex == 1) {
                         return "Diamonds worth: " + (tooltipItems[0].parsed.y/parseFloat(tooltipItems[0].label))
                      } else if (tooltipItems[0].datasetIndex == 3) {
-                        return "Total Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9)
+                        return "Cumulative Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9)
                      }
                   }
                }
