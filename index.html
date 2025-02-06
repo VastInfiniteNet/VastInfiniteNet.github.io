@@ -1,179 +1,173 @@
 <div>
-   <canvas id="depthChart"></canvas>
+   <canvas id="orders-Feb-5-2025-7.json"></canvas>
+   <canvas id="orders-Feb-5-2025-12.json"></canvas>
 </div>
 
 <div>
-   <canvas id="playerNetChart"></canvas>
+   <canvas id="orders-Feb-5-2025-8.json"></canvas>
+   <canvas id="orders-Feb-5-2025-15.json"></canvas>
 </div>
+
+<div>
+   <canvas id="orders-Feb-5-2025-9.json"></canvas>
+   <canvas id="orders-Feb-5-2025-26.json"></canvas>
+</div>
+
+<div>
+   <canvas id="orders-Feb-5-2025-10.json"></canvas>
+   <canvas id="orders-Feb-5-2025-28.json"></canvas>
+</div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const ctx = document.getElementById('depthChart');
-//const ctx2 = document.getElementById('playerNetChart');
+const graphs = Array.from(document.getElementsByTagName("canvas"))
+graphs.forEach(graph => addGraph(graph))
 
-const data = fetch("./numbers.json")
+async function addGraph(ctx) {
+   const orderBook = await fetch(`orderBooks/${ctx.id}`)
    .then((res) => {
       return res.json();
    })
-data.then(data => SetupDepthChart(data))
-//data.then(data => SetupPlayerNetChart(data))
 
-function LeaveOneDecimalPlace(number) {
-   return Math.round(number * 10)/10
-}
+   let SetupDepthChart = (data) => {
 
-function SetupDepthChart(data) {
-   class PricePoint {
-      buys;
-      sells;
-      constructor(sells = 0, buys = 0) {
-         this.sells = sells
-         this.buys = buys
+      var buyOrders = data["buy-orders"]
+      var sellOrders = data["sell-orders"]
+      var buyPairs = {}
+      var sellPairs = {}
+      sellOrders.forEach((order) => sellPairs[order["price"]] = order["volume"])
+      buyOrders.forEach((order) => buyPairs[order["price"]] = order["volume"])
+      var orderPrices = Array.from((new Set(buyOrders.map(order => order["price"]))).union(new Set(sellOrders.map(order => order["price"]))))
+      
+      
+      sellOrders.sort((a,b) => a['price']-b['price'])
+      buyOrders.sort((a,b) => a['price']-b['price'])
+      orderPrices.sort((a,b) => a-b)
+
+      var SumUntilIndex = (numList, index) => {
+         var total = 0
+         for(var i = 0; i <= index; i++) {
+            total += numList[i]
+         }
+         return total
       }
-   }
 
-   var pricePoints = {}
-   
+      var totalIronAvailable = buyOrders.toReversed()
+      var totalDiamondAvailable = []
+      
+      totalDiamondAvailable = [sellOrders[0] != 0 ? sellOrders[0]/orderPrices[0] : undefined ]
+      if (totalIronAvailable[0] == 0)
+         totalIronAvailable[0] = undefined
+      else
+         totalIronAvailable[0] /= 9
 
-   data['sell-orders'].forEach(order => {
-      price = LeaveOneDecimalPlace(order['input-amount']/order['output-amount'])
-      pricePoints[price] = new PricePoint(sells = order['exchanges-left'] * order['output-amount'])
-   })
 
-   console.log("\n\n\n\n")
-
-   data['buy-orders'].forEach(order => {
-      price = LeaveOneDecimalPlace(order['output-amount']/order['input-amount'])
-      if (!(price in pricePoints))
-         pricePoints[price] = new PricePoint()
-      pricePoints[price].buys = order['exchanges-left'] * order['input-amount']
-   })
-
-   var buyDepthData = []
-   var sellDepthData = []
-   var priceLabels = []
-   Object.keys(pricePoints).sort((a,b) => {return a - b}).forEach(price => {
-      priceLabels.push(price)
-      sellDepthData.push(pricePoints[price]['sells'] * price)
-      buyDepthData.push(pricePoints[price]['buys'] * price)
-   })
-
-   console.log("Price Points:", pricePoints)
-   console.log("Price Labels:", priceLabels)
-   console.log("Sell Depth data:", sellDepthData)
-   console.log("Buy Depth Data:", buyDepthData)
-
-   var SumUntilIndex = (numList, index) => {
-      var total = 0
-      for(var i = 0; i <= index; i++) {
-         total += numList[i]
+      for (var i = 1; i < orderPrices.length; i++) {
+         partialDiamond = sellOrders[i]/orderPrices[i] + (totalDiamondAvailable[i - 1] ?? 0)
+         if (partialDiamond == 0)
+            partialDiamond = undefined
+         totalDiamondAvailable.push(partialDiamond)
+         partialIron = totalIronAvailable[i]/9 + (totalIronAvailable[i - 1] ?? 0)
+         if (partialIron == 0)
+            partialIron = undefined
+         totalIronAvailable[i] = partialIron
       }
-      return total
-   }
 
-   var totalIronAvailable = buyDepthData.toReversed()
-   var totalDiamondAvailable = []
-   
-   totalDiamondAvailable = [sellDepthData[0] != 0 ? sellDepthData[0]/priceLabels[0] : undefined ]
-   if (totalIronAvailable[0] == 0)
-      totalIronAvailable[0] = undefined
-   else
-      totalIronAvailable[0] /= 9
+      totalIronAvailable.reverse()
 
+      buyOrderPoints = orderPrices.map(price=>buyPairs[price])
+      sellOrderPoints = orderPrices.map(price=>sellPairs[price])
 
-   for (var i = 1; i < priceLabels.length; i++) {
-      partialDiamond = sellDepthData[i]/priceLabels[i] + (totalDiamondAvailable[i - 1] ?? 0)
-      if (partialDiamond == 0)
-         partialDiamond = undefined
-      totalDiamondAvailable.push(partialDiamond)
-      partialIron = totalIronAvailable[i]/9 + (totalIronAvailable[i - 1] ?? 0)
-      if (partialIron == 0)
-         partialIron = undefined
-      totalIronAvailable[i] = partialIron
-      console.log(totalIronAvailable)
-   }
-
-   totalIronAvailable.reverse()
-
-   // SETUP
-   new Chart(ctx, {
-      data: {
-         labels: priceLabels,
-         datasets: [
-            {
-               label: 'Selling Iron',
-               type: 'bar',
-               yAxisID: 'yBar',
-               data: sellDepthData,
-            },
-            {
-               label: 'Buying Iron',
-               type: 'bar',
-               yAxisID: 'yBar',
-               data: buyDepthData,
-            }, 
-            {
-               label: 'Cumulative Diamonds Available',
-               yAxisID: 'yLine',
-               type: 'line',
-               stepped: 'before',
-               fill: true,
-               data: totalDiamondAvailable
-            }, 
-            {
-               label: 'Cumulative Iron Blocks Available',
-               yAxisID: 'yLine',
-               type: 'line',
-               stepped: 'after',
-               fill: true,
-               data: totalIronAvailable
-            }
-         ]
-      },
-      options: {
-         scales: {
-            yBar: {
-               beginAtZero: true,
-               title: {
-                  display: true,
-                  text: "Iron Available (ingots)"
+      // SETUP
+      new Chart(ctx, {
+         data: {
+            labels: orderPrices,
+            datasets: [
+               {
+                  label: `${data['commodity']}s available to Buy`,
+                  type: 'bar',
+                  yAxisID: 'yBar',
+                  data: buyOrderPoints,
+               },
+               {
+                  label: `${data['commodity']}s available to Sell`,
+                  type: 'bar',
+                  yAxisID: 'yBar',
+                  data: sellOrderPoints,
+               },
+                
+               /*
+               {
+                  label: `Cumulative ${data['base-payment']}s Available`,
+                  yAxisID: 'yLine',
+                  type: 'line',
+                  stepped: 'before',
+                  fill: true,
+                  data: totalDiamondAvailable
+               }, 
+               {
+                  label: `Cumulative ${data['commodity']} Blocks Available`,
+                  yAxisID: 'yLine',
+                  type: 'line',
+                  stepped: 'after',
+                  fill: true,
+                  data: totalIronAvailable
                }
-            },
-            yLine: {
-               beginAtZero: true,
-               position: 'right',
-               title: {
-                  display: true,
-                  text: "Cumulative Total Asset Available (items)"
-               }
-            },
-            x: {
-               title: {
-                  display: true,
-                  text: data['exchange-input'] + ' Per ' + data['exchange-output']
-               }
-            }
+                  */
+            ]
          },
-         plugins: {
-            title: {
-               display: true, 
-               text: 'Icenia ' + data['exchange-input'] + '/' + data['exchange-output'] + ' Market (' + data['date'] + ')'
+         options: {
+            scales: {
+               yBar: {
+                  beginAtZero: true,
+                  title: {
+                     display: true,
+                     text: `${data['commodity']} Available`
+                  }
+               },
+               /*
+               yLine: {
+                  beginAtZero: true,
+                  position: 'right',
+                  title: {
+                     display: true,
+                     text: "Cumulative Total Asset Available (items)"
+                  }
+               }, 
+               */
+               x: {
+                  title: {
+                     display: true,
+                     text: `${data['commodity']} Per ${data['base-payment']}`
+                  }
+               }
             },
-            tooltip: {
-               callbacks: {
-                  footer: (tooltipItems) => {
-                     if (tooltipItems[0].datasetIndex == 0 || tooltipItems[0].datasetIndex == 1) {
-                        return "Diamonds worth: " + (tooltipItems[0].parsed.y/parseFloat(tooltipItems[0].label))
-                     } else if (tooltipItems[0].datasetIndex == 3) {
-                        return "Cumulative Iron Ingots: " + Math.floor(tooltipItems[0].parsed.y*9)
+            plugins: {
+               title: {
+                  display: true, 
+                  text: `${orderBook['location']} ${data['commodity']}/${data['base-payment']} Exchange Orders ${(new Date(orderBook['time'])).toLocaleString()}`
+               },
+               tooltip: {
+                  callbacks: {
+                     footer: (tooltipItems) => {
+                        if (tooltipItems[0].datasetIndex == 0 || tooltipItems[0].datasetIndex == 1) {
+                           return `Total ${data['base-payment']} worth: ${(tooltipItems[0].parsed.y/parseFloat(tooltipItems[0].label))}`
+                        } else if (tooltipItems[0].datasetIndex == 3) {
+                           return `Cumulative ${data['commodity']}: ${Math.floor(tooltipItems[0].parsed.y*9)}`
+                        }
+                     },
+                     title: (tooltipItems) => {
+                        return `Price: ${tooltipItems[0].label} ${data['commodity']}/${data['base-payment']}`
                      }
                   }
                }
             }
          }
+      });
       }
-   });
-}
 
+      SetupDepthChart(orderBook["data"][0])
+   }
 </script>
