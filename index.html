@@ -1,29 +1,50 @@
+<style>
+   div {height:50%; width:90%}
+</style>
+
 <div>
    <canvas id="orders-Feb-5-2025-7.json"></canvas>
+</div>
+
+<div>
    <canvas id="orders-Feb-5-2025-12.json"></canvas>
 </div>
 
+
+
 <div>
    <canvas id="orders-Feb-5-2025-8.json"></canvas>
-   <canvas id="orders-Feb-5-2025-15.json"></canvas>
 </div>
 
 <div>
+   <canvas id="orders-Feb-5-2025-15.json"></canvas>
+</div>
+
+
+
+<div>
    <canvas id="orders-Feb-5-2025-9.json"></canvas>
+</div>
+
+<div>
    <canvas id="orders-Feb-5-2025-26.json"></canvas>
 </div>
 
 <div>
    <canvas id="orders-Feb-5-2025-10.json"></canvas>
-   <canvas id="orders-Feb-5-2025-28.json"></canvas>
 </div>
 
+<div>
+   <canvas id="orders-Feb-5-2025-28.json"></canvas>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 const graphs = Array.from(document.getElementsByTagName("canvas"))
-graphs.forEach(graph => addGraph(graph))
+graphs.forEach(graph => {
+   addGraph(graph)
+})
 
 async function addGraph(ctx) {
    const orderBook = await fetch(`orderBooks/${ctx.id}`)
@@ -119,6 +140,7 @@ async function addGraph(ctx) {
             ]
          },
          options: {
+            responsive:true, 
             scales: {
                yBar: {
                   beginAtZero: true,
